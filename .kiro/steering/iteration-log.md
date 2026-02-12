@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: Comprehensive iteration tracking log documenting all project changes, decisions, metrics, and progress for the GenAI PCB Design Platform
 ---
 
 # Project Iteration Log
