@@ -1,7 +1,7 @@
 """
 Main API routes for the GenAI PCB Design Platform.
 
-Defines endpoints for design creation, status checking, and file downloads.
+Defines endpoints for design creation, processing, status checking, and file downloads.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,6 +12,8 @@ import logging
 from ..models.database import get_db
 from ..models.design import DesignProject, DesignStatus
 from .schemas import DesignCreateRequest, DesignResponse, DesignListResponse
+from ..services.pipeline_orchestrator import get_pipeline_orchestrator
+from ..services.request_queue import RequestPriority
 
 logger = logging.getLogger(__name__)
 
@@ -193,3 +195,145 @@ async def delete_design(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete design: {str(e)}"
         )
+
+
+@router.post("/designs/{design_id}/process")
+async def process_design(
+    design_id: str,
+    priority: str = "normal",
+    db: Session = Depends(get_db)
+):
+    """
+    Start processing a design through the complete pipeline.
+    
+    Args:
+        design_id: UUID of the design project
+        priority: Processing priority (low, normal, high, critical)
+        db: Database session
+        
+    Returns:
+        Dict with request_id for tracking progress
+    """
+    try:
+        # Get design project
+        design = db.query(DesignProject).filter(DesignProject.id == design_id).first()
+        
+        if not design:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Design {design_id} not found"
+            )
+        
+        # Map priority string to enum
+        priority_map = {
+            "low": RequestPriority.LOW,
+            "normal": RequestPriority.NORMAL,
+            "high": RequestPriority.HIGH,
+            "critical": RequestPriority.CRITICAL
+        }
+        
+        request_priority = priority_map.get(priority.lower(), RequestPriority.NORMAL)
+        
+        # Start pipeline processing
+        orchestrator = get_pipeline_orchestrator()
+        request_id = orchestrator.process_design_request(
+            prompt=design.natural_language_prompt,
+            user_id=str(design.user_id),
+            priority=request_priority
+        )
+        
+        # Update design status
+        design.status = DesignStatus.PROCESSING
+        db.commit()
+        
+        logger.info(f"Started processing design {design_id} with request {request_id}")
+        
+        return {
+            "request_id": request_id,
+            "design_id": design_id,
+            "status": "processing_started",
+            "message": "Design processing has been queued"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing design: {str(e)}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start design processing: {str(e)}"
+        )
+
+
+@router.get("/processing/{request_id}/status")
+async def get_processing_status(request_id: str):
+    """
+    Get the status of a design processing request.
+    
+    Args:
+        request_id: Request ID from process_design endpoint
+        
+    Returns:
+        Dict with processing status, progress, and results
+    """
+    try:
+        orchestrator = get_pipeline_orchestrator()
+        status_info = orchestrator.get_pipeline_status(request_id)
+        
+        if not status_info:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Processing request {request_id} not found"
+            )
+        
+        return status_info
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting processing status: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get processing status: {str(e)}"
+        )
+
+
+@router.get("/health")
+async def health_check():
+    """
+    Health check endpoint for monitoring.
+    
+    Returns:
+        Dict with service status and component health
+    """
+    try:
+        orchestrator = get_pipeline_orchestrator()
+        
+        # Get queue information
+        queue_info = orchestrator.request_queue.get_queue_info()
+        
+        return {
+            "status": "healthy",
+            "timestamp": "2026-02-13T22:30:00Z",
+            "services": {
+                "api": "healthy",
+                "database": "healthy",
+                "pipeline": "healthy",
+                "queue": {
+                    "status": "healthy",
+                    "active_workers": queue_info["active_workers"],
+                    "max_workers": queue_info["max_workers"],
+                    "queued_requests": queue_info["queued_requests"],
+                    "processing_requests": queue_info["processing_requests"]
+                }
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}", exc_info=True)
+        return {
+            "status": "unhealthy",
+            "timestamp": "2026-02-13T22:30:00Z",
+            "error": str(e)
+        }
