@@ -1,0 +1,4 @@
+# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\simulation_engine.py
+# hypothesis_version: 6.151.6
+
+[1.0, 1000000.0, ' 0 ', ' gnd ', '*', '.', '.ac', '.end', '.op', '.op\n.end', 'CAPACITOR', 'CURRENT_SOURCE', 'INDUCTOR', 'RESISTOR', 'VOLTAGE_SOURCE', 'ac', 'circuit.cir', 'dc', 'failed', 'invalid_netlist', 'op', 'out', 'pins', 'reference', 'success', 'timeout', 'tran', 'type', 'value']

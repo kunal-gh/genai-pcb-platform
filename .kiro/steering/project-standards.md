@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: Development standards, code quality requirements, testing guidelines, and best practices for the GenAI PCB Design Platform
 ---
 
 # Project Development Standards

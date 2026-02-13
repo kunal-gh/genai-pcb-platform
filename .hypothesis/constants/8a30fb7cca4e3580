@@ -1,0 +1,4 @@
+# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\api\routes.py
+# hypothesis_version: 6.148.2
+
+[100, '/api/v1', '/designs', '/designs/{design_id}', 'designs']

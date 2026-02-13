@@ -1,0 +1,4 @@
+# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\main.py
+# hypothesis_version: 6.148.2
+
+[500, 8000, '*', '/', '/api/v1', '/docs', '/health', '/redoc', '0.0.0.0', '0.1.0', 'SELECT 1', '__main__', 'active', 'api', 'connected', 'degraded', 'detail', 'disconnected', 'docs', 'error', 'features', 'healthy', 'main:app', 'message', 'not_configured', 'status', 'status_code', 'version']

@@ -6,7 +6,7 @@ SQLAlchemy models for PCB design projects, files, and metadata.
 
 from sqlalchemy import Column, String, Text, DateTime, Integer, Float, Boolean, JSON, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid
 import enum
@@ -181,8 +181,9 @@ class SimulationResult(Base):
     validation_status = Column(String(50))
     
     # Waveforms and S-parameters (stored as file references)
-    waveform_files = Column(ARRAY(String))
-    s_parameter_files = Column(ARRAY(String))
+    # Using JSON for SQLite compatibility (would be ARRAY(String) in PostgreSQL)
+    waveform_files = Column(JSON)
+    s_parameter_files = Column(JSON)
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     

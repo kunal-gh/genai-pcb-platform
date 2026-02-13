@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: Core project context and overview for the GenAI PCB Design Platform
 ---
 
 # GenAI PCB Design Platform Context

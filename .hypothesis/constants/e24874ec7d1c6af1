@@ -1,0 +1,4 @@
+# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\models\design.py
+# hypothesis_version: 6.148.2
+
+[100, 255, 500, 'DesignFile', 'DesignProject', 'SimulationResult', 'VerificationResult', 'all, delete-orphan', 'archived', 'bom', 'completed', 'design_files', 'design_projects', 'design_projects.id', 'documentation', 'draft', 'drill', 'failed', 'files', 'gerber', 'main', 'netlist', 'pcb_layout', 'processing', 'project', 'schematic', 'simulation', 'simulation_results', 'step', 'verification_results']

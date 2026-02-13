@@ -56,6 +56,28 @@ class DesignConstraints:
 
 
 @dataclass
+class ClarificationRequest:
+    """Request for clarification on ambiguous input."""
+    field: str  # What needs clarification
+    message: str  # User-friendly question
+    suggestions: List[str] = None  # Suggested values
+    severity: str = "warning"  # warning, error, info
+    
+    def __post_init__(self):
+        if self.suggestions is None:
+            self.suggestions = []
+
+
+@dataclass
+class ValidationError:
+    """Validation error with descriptive message."""
+    field: str
+    message: str
+    suggestion: Optional[str] = None
+    error_code: Optional[str] = None
+
+
+@dataclass
 class StructuredRequirements:
     """Complete structured requirements from natural language prompt."""
     board: BoardSpecification
@@ -66,12 +88,18 @@ class StructuredRequirements:
     original_prompt: str = ""
     confidence_score: float = 1.0
     ambiguities: List[str] = None
+    clarification_requests: List[ClarificationRequest] = None
+    validation_errors: List[ValidationError] = None
     
     def __post_init__(self):
         if self.connections is None:
             self.connections = []
         if self.ambiguities is None:
             self.ambiguities = []
+        if self.clarification_requests is None:
+            self.clarification_requests = []
+        if self.validation_errors is None:
+            self.validation_errors = []
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -83,7 +111,9 @@ class StructuredRequirements:
             "connections": self.connections,
             "original_prompt": self.original_prompt,
             "confidence_score": self.confidence_score,
-            "ambiguities": self.ambiguities
+            "ambiguities": self.ambiguities,
+            "clarification_requests": [asdict(c) for c in self.clarification_requests],
+            "validation_errors": [asdict(e) for e in self.validation_errors]
         }
 
 
@@ -113,7 +143,7 @@ class NLPService:
     
     # Value patterns
     VALUE_PATTERNS = {
-        "resistance": r"(\d+(?:\.\d+)?)\s*(?:k|K|M)?(?:ohm|Ω|R)",
+        "resistance": r"(\d+(?:\.\d+)?)\s*-?\s*([kKMm])?\s*-?\s*(?:ohm|Ω|R)\b",
         "capacitance": r"(\d+(?:\.\d+)?)\s*(?:p|n|u|µ|m)?(?:F|farad)",
         "voltage": r"(\d+(?:\.\d+)?)\s*(?:V|volt)",
         "current": r"(\d+(?:\.\d+)?)\s*(?:m)?(?:A|amp)",
@@ -171,6 +201,12 @@ class NLPService:
         # Detect ambiguities
         ambiguities = self._detect_ambiguities(prompt_lower, components)
         
+        # Generate clarification requests
+        clarifications = self._generate_clarification_requests(board, power, components, prompt_lower)
+        
+        # Validate requirements
+        validation_errors = self._validate_requirements(board, power, components, prompt)
+        
         # Calculate confidence score
         confidence = self._calculate_confidence(board, power, components, ambiguities)
         
@@ -181,10 +217,13 @@ class NLPService:
             constraints=constraints,
             original_prompt=prompt,
             confidence_score=confidence,
-            ambiguities=ambiguities
+            ambiguities=ambiguities,
+            clarification_requests=clarifications,
+            validation_errors=validation_errors
         )
         
-        logger.info(f"Parsed {len(components)} components with confidence {confidence:.2f}")
+        logger.info(f"Parsed {len(components)} components with confidence {confidence:.2f}, "
+                   f"{len(clarifications)} clarifications, {len(validation_errors)} errors")
         
         return requirements
     
@@ -343,6 +382,219 @@ class NLPService:
         
         return ambiguities
     
+    def _generate_clarification_requests(
+        self,
+        board: BoardSpecification,
+        power: PowerSpecification,
+        components: List[ComponentRequirement],
+        prompt: str
+    ) -> List[ClarificationRequest]:
+        """Generate user-friendly clarification requests for ambiguous inputs."""
+        clarifications = []
+        
+        # Board dimensions clarification
+        if board.width_mm is None or board.height_mm is None:
+            clarifications.append(ClarificationRequest(
+                field="board_dimensions",
+                message="What are the desired board dimensions?",
+                suggestions=["40x20mm", "50x50mm", "100x80mm", "Custom size"],
+                severity="warning"
+            ))
+        
+        # Power supply clarification
+        if power.type is None:
+            clarifications.append(ClarificationRequest(
+                field="power_supply",
+                message="What power source will the board use?",
+                suggestions=["9V battery", "USB (5V)", "AA batteries", "AC adapter", "Other"],
+                severity="warning"
+            ))
+        
+        # Component value clarifications
+        for i, comp in enumerate(components):
+            if comp.type == "RESISTOR" and not comp.value:
+                clarifications.append(ClarificationRequest(
+                    field=f"component_{i}_value",
+                    message=f"What resistance value for the {comp.type.lower()}?",
+                    suggestions=["220Ω", "1kΩ", "10kΩ", "100kΩ"],
+                    severity="warning"
+                ))
+            elif comp.type == "CAPACITOR" and not comp.value:
+                clarifications.append(ClarificationRequest(
+                    field=f"component_{i}_value",
+                    message=f"What capacitance value for the {comp.type.lower()}?",
+                    suggestions=["100nF", "1µF", "10µF", "100µF"],
+                    severity="warning"
+                ))
+            elif comp.type == "LED" and not comp.package:
+                clarifications.append(ClarificationRequest(
+                    field=f"component_{i}_package",
+                    message=f"What package type for the LED?",
+                    suggestions=["5mm through-hole", "0805 SMD", "0603 SMD"],
+                    severity="info"
+                ))
+        
+        # Layer count clarification for complex designs
+        if len(components) > 20 and board.layers == 1:
+            clarifications.append(ClarificationRequest(
+                field="board_layers",
+                message="This design has many components. Would you like a multi-layer board?",
+                suggestions=["2-layer", "4-layer", "Keep single-layer"],
+                severity="info"
+            ))
+        
+        return clarifications
+    
+    def _validate_requirements(
+        self,
+        board: BoardSpecification,
+        power: PowerSpecification,
+        components: List[ComponentRequirement],
+        prompt: str
+    ) -> List[ValidationError]:
+        """Validate requirements and generate descriptive error messages."""
+        errors = []
+        
+        # Validate prompt length (10-1000 words)
+        word_count = len(prompt.split())
+        if word_count < 10:
+            errors.append(ValidationError(
+                field="prompt",
+                message=f"Prompt is too short ({word_count} words). Please provide more details.",
+                suggestion="Include component types, connections, and board specifications. "
+                          "Example: 'Design a 40x20mm PCB with a 9V battery, LED, and 220-ohm resistor in series.'",
+                error_code="PROMPT_TOO_SHORT"
+            ))
+        elif word_count > 1000:
+            errors.append(ValidationError(
+                field="prompt",
+                message=f"Prompt is too long ({word_count} words). Maximum is 1000 words.",
+                suggestion="Break down your design into smaller, focused descriptions. "
+                          "Focus on essential components and connections first.",
+                error_code="PROMPT_TOO_LONG"
+            ))
+        
+        # Validate board dimensions are reasonable
+        if board.width_mm is not None and board.height_mm is not None:
+            if board.width_mm < 10 or board.height_mm < 10:
+                errors.append(ValidationError(
+                    field="board_dimensions",
+                    message=f"Board dimensions ({board.width_mm}x{board.height_mm}mm) are too small.",
+                    suggestion="Minimum board size is 10x10mm. Consider increasing dimensions to fit components.",
+                    error_code="BOARD_TOO_SMALL"
+                ))
+            elif board.width_mm > 500 or board.height_mm > 500:
+                errors.append(ValidationError(
+                    field="board_dimensions",
+                    message=f"Board dimensions ({board.width_mm}x{board.height_mm}mm) are unusually large.",
+                    suggestion="Maximum recommended board size is 500x500mm. Verify dimensions are correct.",
+                    error_code="BOARD_TOO_LARGE"
+                ))
+        
+        # Validate power specifications
+        if power.voltage is not None:
+            if power.voltage < 0:
+                errors.append(ValidationError(
+                    field="power_voltage",
+                    message=f"Voltage cannot be negative ({power.voltage}V).",
+                    suggestion="Specify a positive voltage value (e.g., 5V, 9V, 12V).",
+                    error_code="INVALID_VOLTAGE"
+                ))
+            elif power.voltage > 48:
+                errors.append(ValidationError(
+                    field="power_voltage",
+                    message=f"Voltage ({power.voltage}V) exceeds typical low-voltage range.",
+                    suggestion="Voltages above 48V require special safety considerations. "
+                              "Verify this is correct for your application.",
+                    error_code="HIGH_VOLTAGE_WARNING"
+                ))
+        
+        # Also check for negative voltage in the prompt text
+        negative_voltage_match = re.search(r"-\s*(\d+(?:\.\d+)?)\s*(?:V|volt)", prompt, re.IGNORECASE)
+        if negative_voltage_match:
+            errors.append(ValidationError(
+                field="power_voltage",
+                message=f"Voltage cannot be negative (-{negative_voltage_match.group(1)}V detected).",
+                suggestion="Specify a positive voltage value (e.g., 5V, 9V, 12V).",
+                error_code="INVALID_VOLTAGE"
+            ))
+        
+        # Check for high voltage in prompt if not already detected
+        if power.voltage is None or power.voltage <= 48:
+            high_voltage_match = re.search(r"(\d+)\s*(?:V|volt)", prompt, re.IGNORECASE)
+            if high_voltage_match:
+                voltage_val = float(high_voltage_match.group(1))
+                if voltage_val > 48:
+                    errors.append(ValidationError(
+                        field="power_voltage",
+                        message=f"Voltage ({voltage_val}V) exceeds typical low-voltage range.",
+                        suggestion="Voltages above 48V require special safety considerations. "
+                                  "Verify this is correct for your application.",
+                        error_code="HIGH_VOLTAGE_WARNING"
+                    ))
+        
+        # Validate component count
+        if len(components) == 0:
+            errors.append(ValidationError(
+                field="components",
+                message="No components detected in the prompt.",
+                suggestion="Specify at least one component (e.g., LED, resistor, capacitor, IC). "
+                          "Example: 'Add a 220-ohm resistor and an LED.'",
+                error_code="NO_COMPONENTS"
+            ))
+        elif len(components) > 100:
+            errors.append(ValidationError(
+                field="components",
+                message=f"Design has {len(components)} components, which may be too complex for automated generation.",
+                suggestion="Consider breaking the design into smaller modules or subsystems.",
+                error_code="TOO_MANY_COMPONENTS"
+            ))
+        
+        # Validate component values are reasonable
+        for i, comp in enumerate(components):
+            if comp.type == "RESISTOR" and comp.value:
+                # Extract numeric value from the component value string
+                value_str = comp.value
+                value_match = re.search(r"(\d+(?:\.\d+)?)", value_str)
+                if value_match:
+                    value = float(value_match.group(1))
+                    
+                    # Apply multipliers - check for multiplier letter
+                    multiplier_match = re.search(r"(\d+(?:\.\d+)?)\s*-?\s*([kKMm])", value_str)
+                    if multiplier_match:
+                        multiplier = multiplier_match.group(2)
+                        if multiplier in ['k', 'K']:
+                            value *= 1000
+                        elif multiplier == 'M':
+                            value *= 1000000
+                        elif multiplier == 'm' and 'mohm' not in value_str.lower():
+                            # Only treat as milliohm if explicitly "mohm", otherwise might be typo for M
+                            # For "100m-ohm" we'll assume it's meant to be 100M (megaohm)
+                            if re.search(r'\d+\s*m\s*-?\s*ohm', value_str, re.IGNORECASE):
+                                # Check context - if value is large (>10), likely meant Megaohm
+                                if value >= 10:
+                                    value *= 1000000
+                                else:
+                                    value /= 1000
+                    
+                    # Check for unreasonable values
+                    if value < 1:
+                        errors.append(ValidationError(
+                            field=f"component_{i}_value",
+                            message=f"Resistor value ({comp.value}) is unusually low.",
+                            suggestion="Typical resistor values range from 1Ω to 10MΩ. Verify the value is correct.",
+                            error_code="RESISTOR_VALUE_LOW"
+                        ))
+                    elif value > 10000000:
+                        errors.append(ValidationError(
+                            field=f"component_{i}_value",
+                            message=f"Resistor value ({comp.value}) is unusually high.",
+                            suggestion="Typical resistor values range from 1Ω to 10MΩ. Verify the value is correct.",
+                            error_code="RESISTOR_VALUE_HIGH"
+                        ))
+        
+        return errors
+    
     def _calculate_confidence(
         self,
         board: BoardSpecification,
@@ -380,12 +632,31 @@ class NLPService:
         Returns:
             tuple: (is_valid, error_message)
         """
-        # Check length
-        if len(prompt) < 10:
-            return False, "Prompt is too short (minimum 10 characters)"
+        # Check for empty or whitespace-only prompt
+        if not prompt or not prompt.strip():
+            return False, (
+                "Prompt cannot be empty. Please provide a description of your PCB design.\n"
+                "Example: 'Design a 40x20mm PCB with a 9V battery, LED, and 220-ohm resistor in series.'"
+            )
         
+        # Check minimum length (characters)
+        if len(prompt) < 10:
+            return False, (
+                f"Prompt is too short ({len(prompt)} characters). Minimum is 10 characters.\n"
+                "Please provide more details about your design, including:\n"
+                "  • Board dimensions (e.g., 40x20mm)\n"
+                "  • Power source (e.g., 9V battery, USB)\n"
+                "  • Components (e.g., LED, resistor, capacitor)\n"
+                "  • Connections between components"
+            )
+        
+        # Check maximum length (characters)
         if len(prompt) > 10000:
-            return False, "Prompt is too long (maximum 10,000 characters)"
+            return False, (
+                f"Prompt is too long ({len(prompt)} characters). Maximum is 10,000 characters.\n"
+                "Please break down your design into smaller, focused descriptions.\n"
+                "Consider describing one subsystem or module at a time."
+            )
         
         # Check for at least one component keyword
         has_component = any(
@@ -394,6 +665,18 @@ class NLPService:
         )
         
         if not has_component:
-            return False, "No recognizable components found in prompt"
+            component_examples = ", ".join(list(self.COMPONENT_PATTERNS.keys())[:8])
+            return False, (
+                "No recognizable components found in prompt.\n"
+                f"Please include at least one component type such as: {component_examples}.\n"
+                "Example: 'Design a simple LED circuit with a resistor and 9V battery.'"
+            )
+        
+        # Check for suspicious patterns that might indicate invalid input
+        if re.search(r"<script|javascript:|onerror=", prompt, re.IGNORECASE):
+            return False, (
+                "Prompt contains invalid characters or patterns.\n"
+                "Please provide a plain text description of your PCB design."
+            )
         
         return True, None

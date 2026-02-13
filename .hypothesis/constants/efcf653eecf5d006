@@ -1,0 +1,4 @@
+# file: C:\Users\kunal\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\ext\declarative\__init__.py
+# hypothesis_version: 6.148.2
+
+['AbstractConcreteBase', 'ConcreteBase', 'DeclarativeMeta', 'DeferredReflection', 'as_declarative', 'declarative_base', 'declared_attr', 'has_inherited_table', 'synonym_for']
