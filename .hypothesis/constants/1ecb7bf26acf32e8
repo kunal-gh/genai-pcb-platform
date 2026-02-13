@@ -1,0 +1,4 @@
+# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\component_library.py
+# hypothesis_version: 6.151.6
+
+[':', 'C', 'Conn', 'Connector', 'Connector:Conn', 'Crystal', 'D', 'Device', 'Device:C', 'Device:Crystal', 'Device:D', 'Device:Fuse', 'Device:L', 'Device:LED', 'Device:Q_NPN_BCE', 'Device:R', 'Device:U', 'Diode_SMD:D_SOD-123', 'Fuse', 'Invalid symbol name', 'L', 'LED', 'Q', 'Q_NPN_BCE', 'R', 'SW_Push', 'Switch', 'Switch:SW_Push', 'U', 'active', 'alternatives', 'category', 'component', 'description', 'footprint', 'in_stock', 'library', 'lifecycle_status', 'manufacturer', 'package', 'part', 'part_number', 'pricing', 'suggestions', 'symbol', 'valid', 'warnings']

@@ -1,0 +1,4 @@
+# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\bom_generator.py
+# hypothesis_version: 6.151.6
+
+[0.0, 0.5, ', ', 'Availability', 'Description', 'Extended Price', 'HARD TO SOURCE', 'In Stock', 'Manufacturer', 'OBSOLETE', 'OK', 'Out of Stock', 'Package', 'Part Number', 'Quantity', 'Status', 'Supplier', 'Supplier Part Number', 'UNKNOWN', 'Unit Price', 'Unknown', 'Value', 'active', 'components', 'description', 'discontinued', 'generated_at', 'items', 'manufacturer', 'name', 'obsolete', 'package', 'part_number', 'price', 'quantity', 'reference', 'sku', 'summary', 'value', 'w', 'warnings']
