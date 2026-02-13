@@ -53,7 +53,7 @@ class PerformanceMonitor:
         self._metrics: List[PerformanceMetric] = []
         self._operations: Dict[str, OperationMetrics] = {}
         self._operation_stats: Dict[str, List[float]] = defaultdict(list)
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()  # Use reentrant lock to avoid deadlocks
         logger.info("Performance monitor initialized")
     
     def start_operation(self, operation_id: str, operation_name: str, metadata: Optional[Dict[str, Any]] = None) -> None:

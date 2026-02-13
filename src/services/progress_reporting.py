@@ -95,7 +95,7 @@ class ProgressReporter:
     def __init__(self):
         """Initialize progress reporter."""
         self._operations: Dict[str, OperationProgress] = {}
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()  # Use reentrant lock to avoid deadlocks
         logger.info("Progress reporter initialized")
     
     def create_operation(

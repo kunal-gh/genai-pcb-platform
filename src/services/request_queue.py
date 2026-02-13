@@ -53,6 +53,7 @@ class QueueStatus:
     completed_at: Optional[datetime] = None
     result: Optional[Any] = None
     error: Optional[str] = None
+    operation_name: Optional[str] = None  # Store operation name for retrieval
 
 
 class RequestQueue:
@@ -78,7 +79,7 @@ class RequestQueue:
         self._active_workers = 0
         self._request_status: Dict[str, QueueStatus] = {}
         self._processing_times: Dict[str, List[float]] = {}
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()  # Use reentrant lock to avoid deadlocks
         self._workers: List[threading.Thread] = []
         self._running = False
         
@@ -158,7 +159,8 @@ class RequestQueue:
             request_id=request_id,
             status="queued",
             position=position,
-            estimated_wait_time=estimated_wait
+            estimated_wait_time=estimated_wait,
+            operation_name=operation_name  # Store operation name
         )
         
         with self._lock:
@@ -353,7 +355,7 @@ class RequestQueue:
         """Get operation name for a request."""
         with self._lock:
             status = self._request_status.get(request_id)
-            return status.metadata.get("operation_name", "unknown") if status else "unknown"
+            return status.operation_name if status else "unknown"
 
 
 # Global request queue instance
