@@ -1,4 +1,4 @@
 # file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\skidl_generator.py
-# hypothesis_version: 6.151.6
+# hypothesis_version: 6.148.2
 
 ['#', '+=', 'Net', 'Net(', 'Part', '\\w+\\s*=\\s*Part\\s*\\(', 'attempts', 'connect', 'errors', 'generate_netlist', 'latency_ms', 'library', 'model', 'openai', 'provider', 'skidl', 'tokens_used', 'type', 'valid', 'variable', 'warnings']

@@ -12,6 +12,7 @@ import logging
 from ..models.database import get_db
 from ..models.design import DesignProject, DesignStatus
 from .schemas import DesignCreateRequest, DesignResponse, DesignListResponse
+from .deps import get_current_user_id_for_designs
 from ..services.pipeline_orchestrator import get_pipeline_orchestrator
 from ..services.request_queue import RequestPriority
 
@@ -23,30 +24,17 @@ router = APIRouter(prefix="/api/v1", tags=["designs"])
 @router.post("/designs", response_model=DesignResponse, status_code=status.HTTP_201_CREATED)
 async def create_design(
     request: DesignCreateRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user_id_for_designs),
 ):
     """
     Create a new PCB design from natural language prompt.
-    
-    Args:
-        request: Design creation request with natural language prompt
-        db: Database session
-        
-    Returns:
-        DesignResponse: Created design project with ID and status
-        
-    Example:
-        POST /api/v1/designs
-        {
-            "name": "LED Circuit",
-            "description": "Simple LED with resistor",
-            "prompt": "Design a 40x20mm PCB with 9V battery, LED, and 220-ohm resistor"
-        }
+    Uses authenticated user if Bearer token present; otherwise placeholder user.
     """
     try:
-        # Create design project
+        from uuid import UUID
         design = DesignProject(
-            user_id="00000000-0000-0000-0000-000000000000",  # TODO: Get from auth
+            user_id=UUID(user_id),
             name=request.name,
             description=request.description,
             natural_language_prompt=request.prompt,

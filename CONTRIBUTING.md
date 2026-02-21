@@ -1,6 +1,6 @@
 # Contributing to stuff-made-easy
 
-Thank you for your interest in contributing to the GenAI PCB Design Platform! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to Stuff-made-easy! This document provides guidelines and information for contributors.
 
 ## 🚀 Getting Started
 

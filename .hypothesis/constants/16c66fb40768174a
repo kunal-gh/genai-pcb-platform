@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\models\__init__.py
-# hypothesis_version: 6.151.6
-
-['Base', 'Component', 'ComponentCategory', 'DesignFile', 'DesignProject', 'DesignStatus', 'FileType', 'Manufacturer', 'PackageType', 'SimulationResult', 'VerificationResult', 'drop_db', 'get_db', 'get_db_context', 'init_db']

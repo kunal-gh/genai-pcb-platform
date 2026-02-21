@@ -32,6 +32,8 @@ from .error_management import ErrorManager
 from .progress_reporting import get_progress_reporter
 from .performance_monitoring import get_performance_monitor
 from .request_queue import get_request_queue, RequestPriority
+from .load_balancer import get_load_balancer, LoadBalancingStrategy, RequestPriority as LBPriority
+from .resource_manager import get_resource_manager
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +118,36 @@ class PipelineOrchestrator:
         self.progress_reporter = get_progress_reporter()
         self.performance_monitor = get_performance_monitor()
         self.request_queue = get_request_queue()
+        self.load_balancer = get_load_balancer()
+        self.resource_manager = get_resource_manager()
+        
+        # Initialize backend servers for load balancing
+        self._initialize_backend_servers()
         
         logger.info("Pipeline orchestrator initialized with all services")
+    
+    def _initialize_backend_servers(self):
+        """Initialize backend servers for load balancing."""
+        try:
+            # Register local backend server
+            self.load_balancer.register_backend_server(
+                server_id="local-primary",
+                host="localhost",
+                port=8000,
+                weight=1.0,
+                max_connections=50
+            )
+            
+            # Register worker node with resource manager
+            self.resource_manager.register_worker_node(
+                node_id="local-primary",
+                cpu_capacity=100.0,
+                memory_capacity=100.0
+            )
+            
+            logger.info("Backend servers initialized for load balancing")
+        except Exception as e:
+            logger.error(f"Failed to initialize backend servers: {e}")
     
     def process_design_request(
         self,
@@ -126,7 +156,7 @@ class PipelineOrchestrator:
         priority: RequestPriority = RequestPriority.NORMAL
     ) -> str:
         """
-        Process a design request asynchronously.
+        Process a design request asynchronously with load balancing.
         
         Args:
             prompt: Natural language design prompt
@@ -138,16 +168,57 @@ class PipelineOrchestrator:
         """
         design_id = str(uuid.uuid4())
         
+        # Map request priority to load balancer priority
+        lb_priority_map = {
+            RequestPriority.LOW: LBPriority.LOW,
+            RequestPriority.NORMAL: LBPriority.NORMAL,
+            RequestPriority.HIGH: LBPriority.HIGH,
+            RequestPriority.CRITICAL: LBPriority.CRITICAL
+        }
+        lb_priority = lb_priority_map.get(priority, LBPriority.NORMAL)
+        
+        # Estimate resource requirements based on prompt complexity
+        prompt_length = len(prompt)
+        estimated_duration = 60 + (prompt_length // 100) * 10  # Base 60s + complexity
+        resource_requirements = {
+            "cpu": 2.0 if prompt_length > 500 else 1.0,
+            "memory": 4.0 if prompt_length > 500 else 2.0
+        }
+        
+        # Submit request to load balancer
+        lb_success = self.load_balancer.submit_request(
+            request_id=design_id,
+            user_id=user_id,
+            request_type="design_processing",
+            priority=lb_priority,
+            estimated_duration=estimated_duration,
+            resource_requirements=resource_requirements
+        )
+        
+        if not lb_success:
+            logger.warning(f"Load balancer submission failed for {design_id}, falling back to direct queue")
+        
+        # Assign task to worker node
+        worker_id = self.resource_manager.assign_task_to_worker(
+            task_id=design_id,
+            task_type="design_processing",
+            resource_requirements=resource_requirements
+        )
+        
+        if worker_id:
+            logger.info(f"Assigned design {design_id} to worker {worker_id}")
+        
         # Enqueue the processing request
         request_id = self.request_queue.enqueue(
             operation_name="design_processing",
             handler=self._process_design_pipeline,
-            args=(design_id, prompt, user_id),
+            args=(design_id, prompt, user_id, worker_id),
             priority=priority,
             metadata={
                 "design_id": design_id,
                 "user_id": user_id,
-                "prompt_length": len(prompt)
+                "prompt_length": len(prompt),
+                "worker_id": worker_id
             }
         )
         
@@ -158,15 +229,17 @@ class PipelineOrchestrator:
         self,
         design_id: str,
         prompt: str,
-        user_id: str
+        user_id: str,
+        worker_id: Optional[str] = None
     ) -> PipelineResult:
         """
-        Execute the complete design pipeline.
+        Execute the complete design pipeline with resource tracking.
         
         Args:
             design_id: Unique design identifier
             prompt: Natural language prompt
             user_id: User identifier
+            worker_id: Assigned worker node ID
             
         Returns:
             PipelineResult with all generated files and metadata
@@ -281,6 +354,12 @@ class PipelineOrchestrator:
             self.performance_monitor.end_operation(design_id, "failed")
             
             logger.error(f"Design pipeline failed for {design_id}: {e}", exc_info=True)
+        
+        finally:
+            # Clean up resources
+            if worker_id:
+                self.resource_manager.complete_task(design_id, worker_id)
+                logger.info(f"Released resources for design {design_id} on worker {worker_id}")
         
         return result
     
@@ -762,6 +841,82 @@ class PipelineOrchestrator:
             }
         
         return status_info
+    
+    def get_cluster_status(self) -> Dict[str, Any]:
+        """
+        Get current cluster status including load balancing and resource metrics.
+        
+        Returns:
+            Comprehensive cluster status information
+        """
+        try:
+            # Get resource manager status
+            resource_status = self.resource_manager.get_cluster_status()
+            
+            # Get load balancer metrics
+            lb_metrics = self.load_balancer.get_metrics()
+            
+            # Get queue status
+            queue_stats = self.request_queue.get_queue_stats()
+            
+            return {
+                "timestamp": datetime.now().isoformat(),
+                "resource_manager": resource_status,
+                "load_balancer": {
+                    "total_requests": lb_metrics.total_requests,
+                    "successful_requests": lb_metrics.successful_requests,
+                    "failed_requests": lb_metrics.failed_requests,
+                    "average_response_time": lb_metrics.average_response_time,
+                    "current_connections": lb_metrics.current_connections,
+                    "queue_length": lb_metrics.queue_length,
+                    "throughput_rps": lb_metrics.throughput_rps
+                },
+                "request_queue": queue_stats,
+                "health": "healthy" if resource_status.get("cluster_metrics", {}).get("utilization_percent", 0) < 90 else "degraded"
+            }
+        except Exception as e:
+            logger.error(f"Failed to get cluster status: {e}")
+            return {"error": str(e), "health": "unknown"}
+    
+    def scale_cluster(self, target_replicas: int) -> bool:
+        """
+        Manually scale the cluster to a target number of replicas.
+        
+        Args:
+            target_replicas: Desired number of worker replicas
+            
+        Returns:
+            True if scaling was successful
+        """
+        try:
+            from .resource_manager import ScalingAction
+            
+            # Determine scaling action
+            current_workers = len([
+                w for w in self.resource_manager.worker_nodes.values()
+                if w.status == "active"
+            ])
+            
+            if target_replicas > current_workers:
+                action = ScalingAction.SCALE_UP
+            elif target_replicas < current_workers:
+                action = ScalingAction.SCALE_DOWN
+            else:
+                return True  # Already at target
+            
+            # Execute scaling
+            success = self.resource_manager.execute_scaling_action(action)
+            
+            if success:
+                logger.info(f"Cluster scaled to {target_replicas} replicas")
+            else:
+                logger.error(f"Failed to scale cluster to {target_replicas} replicas")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Failed to scale cluster: {e}")
+            return False
 
 
 # Global pipeline orchestrator instance

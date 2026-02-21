@@ -1,8 +1,8 @@
 """
-Main FastAPI application entry point for the GenAI PCB Design Platform.
+Main FastAPI application entry point for Stuff-made-easy.
 
 This module initializes the FastAPI application with all necessary middleware,
-routers, and configuration for the stuff-made-easy platform.
+routers, and configuration for the Stuff-made-easy platform.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -19,6 +19,7 @@ sys.path.append(str(Path(__file__).parent))
 from .config import settings
 from .models.database import init_db, engine
 from .api.routes import router as api_router
+from .api.auth import router as auth_router
 from .api.schemas import HealthResponse
 
 # Configure logging
@@ -38,7 +39,7 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events for the application.
     """
     # Startup
-    logger.info("Starting stuff-made-easy GenAI PCB Design Platform...")
+    logger.info("Starting Stuff-made-easy...")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info(f"Debug mode: {settings.DEBUG}")
     
@@ -48,7 +49,9 @@ async def lifespan(app: FastAPI):
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {str(e)}", exc_info=True)
-        raise
+        if settings.is_production:
+            raise
+        logger.warning("Continuing without database (development mode). Start Postgres or run: docker-compose up -d postgres redis")
     
     yield
     
@@ -60,7 +63,7 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI application
 app = FastAPI(
-    title="stuff-made-easy: GenAI PCB Design Platform",
+    title="Stuff-made-easy",
     description="Transform natural language descriptions into manufacturable PCB designs using state-of-the-art AI/ML",
     version="0.1.0",
     docs_url="/docs" if settings.DEBUG else None,
@@ -78,6 +81,7 @@ app.add_middleware(
 )
 
 # Include API routes
+app.include_router(auth_router)
 app.include_router(api_router)
 
 
@@ -85,7 +89,7 @@ app.include_router(api_router)
 async def root():
     """Root endpoint providing basic API information."""
     return {
-        "message": "stuff-made-easy: GenAI PCB Design Platform",
+        "message": "Stuff-made-easy",
         "version": "0.1.0",
         "status": "active",
         "features": [
@@ -111,9 +115,10 @@ async def health_check():
     """
     # Check database connection
     try:
+        from sqlalchemy import text
         from .models.database import SessionLocal
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         db_status = "connected"
     except Exception as e:

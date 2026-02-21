@@ -20,6 +20,7 @@ from .component import (
     ComponentCategory,
     PackageType
 )
+from .user import User
 
 __all__ = [
     # Database
@@ -40,4 +41,5 @@ __all__ = [
     "Manufacturer",
     "ComponentCategory",
     "PackageType",
+    "User",
 ]

@@ -1,4 +1,4 @@
 # file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\kicad_integration.py
-# hypothesis_version: 6.151.6
+# hypothesis_version: 6.148.2
 
 [0.1, 0.2, 0.4, 1.5, 80.0, 100.0, 1000, '%Y-%m-%d', 'Generated PCB layout', 'Netlist file missing', 'PCB file missing', 'basic', 'board', 'board_size', 'components', 'copper_line_width', 'copper_text_size_h', 'copper_text_size_v', 'defaults', 'design_rules_applied', 'design_settings', 'file_paths', 'filename', 'files', 'files_exist', 'footprint', 'gerber_dir', 'gerbers', 'height', 'issues', 'kicad_', 'layers', 'libraries', 'meta', 'min_clearance', 'min_trace_width', 'min_via_size', 'netlist', 'netlist_path', 'nets', 'output_dir', 'pcb', 'pcb_path', 'pinned_symbol_libs', 'project', 'project_name', 'project_path', 'r', 'reference', 'routing_method', 'schematic', 'schematic_path', 'success', 'valid', 'value', 'version', 'w', 'warnings', 'width']

@@ -156,7 +156,11 @@ Thumbs.db
 # Pytest
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
+
+# Hypothesis (property-based testing cache)
+.hypothesis/
 
 # mypy
 .mypy_cache/

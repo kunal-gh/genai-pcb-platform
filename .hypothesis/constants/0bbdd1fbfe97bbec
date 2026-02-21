@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\config.py
-# hypothesis_version: 6.148.2
-
-[300, 587, 1000, './generated_designs', './uploads', '.env', '/usr/bin/kicad', 'Enable debug mode', 'From email address', 'HS256', 'INFO', 'SMTP password', 'SMTP server host', 'SMTP server port', 'SMTP username', 'development', 'ngspice', 'production', 'smtp.gmail.com', 'utf-8']

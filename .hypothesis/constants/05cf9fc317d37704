@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\progress_reporting.py
-# hypothesis_version: 6.151.6
-
-[0.0, 1.0, 100.0, 'cancelled', 'completed', 'completed_at', 'current_step', 'description', 'estimated_completion', 'failed', 'in_progress', 'message', 'metadata', 'name', 'not_started', 'operation_id', 'operation_name', 'overall_progress', 'progress_percent', 'started_at', 'status', 'steps', 'weight']
