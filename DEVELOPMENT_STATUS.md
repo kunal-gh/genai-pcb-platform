@@ -4,11 +4,11 @@
 
 ---
 
-## How far it’s developed
+## How far it's developed
 
 ### Pipeline (end-to-end flow)
 
-| Stage | Status | What’s done |
+| Stage | Status | What's done |
 |-------|--------|-------------|
 | **1. Infrastructure** | ✅ Complete | FastAPI app, SQLAlchemy + PostgreSQL, Redis, config, logging |
 | **2. NLP** | ✅ Complete | Prompt parser, JSON extraction, validation, property tests |
@@ -24,8 +24,8 @@
 | **12. Web UI** | ✅ Complete | React app, prompt input, status, design preview, file download |
 | **13. File export** | ✅ Complete | File packaging, multi-format export |
 | **14. Error handling** | ✅ Complete | Centralized errors, user-facing messages, recovery |
-| **15. Performance** | ⚠️ Partial | Request queue, progress reporting, monitoring; scalability in progress |
-| **16. Security** | ❌ Not started | Auth, JWT, encryption, audit (planned) |
+| **15. Performance** | ✅ Complete | Request queue, progress reporting, monitoring, load balancing, resource management |
+| **16. Security** | ✅ Complete | JWT auth, session management, encryption, audit logging, data privacy |
 | **17. Integration** | ✅ Complete | End-to-end pipeline wired in pipeline orchestrator |
 | **18–19. Final** | ❌ Pending | Full test suite, deployment, production hardening |
 
@@ -36,9 +36,9 @@
 ### By the numbers (from tasks)
 
 - **Tasks:** 19 major task groups.
-- **Sub-tasks:** Most implementation sub-tasks are **done** (e.g. 2.1–2.4, 3.1–3.3, 5.1–5.3, 6.1–6.2, 7.1–7.2, 8.1–8.3, 10.1, 11.1–11.3, 12.1–12.2, 13.1, 14.1–14.2, 15.1, 17.1).
-- **Optional property tests:** Some are done (e.g. NLP, codegen, simulation); others still open (e.g. PCB, BOM, UI, file export, error handling, performance).
-- **Remaining:** Security (16), final integration tests (17.2), full validation and deployment (18–19).
+- **Sub-tasks:** All core implementation sub-tasks are **done** (Tasks 1-16 complete).
+- **Optional property tests:** Some are done (e.g. NLP, codegen, simulation); others still open (e.g. PCB, BOM, UI, file export, error handling, performance, security).
+- **Remaining:** Integration tests (17.2), final validation and deployment (18-19).
 
 ---
 
@@ -49,6 +49,8 @@
 3. **Use the web UI:** Prompt input, processing status, design preview, file download.
 4. **Verify designs:** ERC/DRC and DFM checks with reporting.
 5. **Simulate:** PySpice-based simulation and result visualization (when configured).
+6. **Secure authentication:** JWT-based auth with session management and audit logging.
+7. **Data privacy:** Complete data deletion, export, and GDPR compliance features.
 
 ---
 
@@ -86,34 +88,33 @@ If Postgres/Redis are not running, the app still starts in development (health w
 | Area | Path | Purpose |
 |------|------|--------|
 | API | `src/api/routes.py` | Design CRUD, process, status, download |
+| Auth | `src/api/auth.py` | JWT authentication, login, register |
 | Pipeline | `src/services/pipeline_orchestrator.py` | End-to-end NLP → Gerber flow |
 | NLP | `src/services/nlp_service.py` | Prompt parsing, validation |
 | LLM | `src/services/llm_service.py` | OpenAI/Anthropic, SKiDL generation |
 | SKiDL | `src/services/skidl_generator.py`, `skidl_executor.py` | Code gen + execution |
 | KiCad | `src/services/kicad_integration.py`, `manufacturing_export.py` | PCB + Gerber/STEP |
 | Verification | `src/services/design_verification.py`, `dfm_validation.py` | ERC/DRC/DFM |
+| Security | `src/services/encryption_service.py`, `audit_service.py` | Encryption, audit logging |
+| Privacy | `src/services/data_privacy_service.py`, `secure_storage_service.py` | GDPR compliance, secure storage |
 | Frontend | `frontend/src/` | React UI (Design, History, preview, download) |
 
 ---
 
 ## Plan for later (roadmap)
 
-What’s left before production and after:
+What's left before production:
 
 | Priority | Task | What to do |
 |----------|------|-------------|
-| **1** | **15.2 Scalability** | Finish scalability: auto-scaling, load balancing (e.g. use `load_balancer.py` / `resource_manager.py`), resource monitoring. Optional: 15.3 property tests. |
-| **2** | **16 Security** | 16.1: JWT auth, session management, user data encryption. 16.2: Secure design storage, data deletion, audit logging. Optional: 16.3 property tests. |
-| **3** | **17.2 Integration tests** | End-to-end tests: full natural language → Gerber pipeline, ≥95% DFM target, concurrent users and error recovery. |
-| **4** | **18 Deployment** | 18.1: Full test suite, MVP criteria, realistic scenarios. 18.2: Production config, CI/CD, monitoring, runbooks. |
-| **5** | **19 Final checkpoint** | All tests green; fix any regressions. |
+| **1** | **17.2 Integration tests** | End-to-end tests: full natural language → Gerber pipeline, ≥95% DFM target, concurrent users and error recovery. |
+| **2** | **18 Deployment** | 18.1: Full test suite, MVP criteria, realistic scenarios. 18.2: Production config, CI/CD, monitoring, runbooks. |
+| **3** | **19 Final checkpoint** | All tests green; fix any regressions. |
 | **Optional** | **Property tests** | Remaining property tests for PCB (7.3), BOM (10.2), UI (12.3), file export (13.2), error handling (14.3), performance (15.3), security (16.3). |
 
 **Targets (from design):** ≥95% DFM pass rate, &lt;1% hallucination (RAG verification), 100% routing success, &gt;99% simulation accuracy.
 
-**Suggested order:** Security (16) → Integration tests (17.2) → Deployment (18) → Final checkpoint (19). Do 15.2 when you need multi-user/concurrent load.
-
-**Scaffolded:** `src/api/auth.py` (login/register/me stubs) and `src/api/deps.py` (get_current_user_optional / get_current_user_required / get_current_user_id_for_designs). Implement JWT and user store in Task 16.1.
+**Current Status:** All core implementation complete (Tasks 1-16). Ready for integration testing and deployment.
 
 ---
 
