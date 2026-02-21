@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\ext\declarative\extensions.py
-# hypothesis_version: 6.148.2
-
-['*', '__mapper__', 'include_properties', 'pjoin', 'polymorphic_abstract', 'polymorphic_on', 'strict_attrs', 'type', 'with_polymorphic']

@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\error_management.py
-# hypothesis_version: 6.148.2
-
-[0.0, 100, 1000, 'by_category', 'by_severity', 'code_generation', 'component_selection', 'critical', 'database', 'error', 'error_manager', 'external_api', 'file_export', 'info', 'logs', 'logs/errors.log', 'metadata', 'nlp_parsing', 'pcb_layout', 'recovery_attempts', 'recovery_rate', 'recovery_successes', 'result', 'schematic_generation', 'simulation', 'system', 'timestamp', 'total_errors', 'verification', 'warning']

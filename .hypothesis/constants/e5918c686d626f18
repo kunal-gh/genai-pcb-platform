@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\models\component.py
-# hypothesis_version: 6.148.2
-
-[0.0, 100, 255, 500, 'Component', 'Manufacturer', 'bga', 'capacitor', 'category', 'components', 'connector', 'crystal', 'diode', 'dip', 'fuse', 'ic', 'in_stock', 'inductor', 'led', 'lifecycle_status', 'manufacturer', 'manufacturers', 'manufacturers.id', 'other', 'package_type', 'price', 'qfp', 'quantity', 'relay', 'resistor', 'sensor', 'smd', 'soic', 'sot23', 'switch', 'through_hole', 'to220', 'transformer', 'transistor', 'tssop']

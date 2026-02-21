@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\llm_service.py
-# hypothesis_version: 6.148.2
-
-[0.2, 1.0, 1000, 4000, '### Components', '### Connections', '### Power Supply', 'Net', 'Part', '```', '```python', 'anthropic', 'board', 'components', 'connections', 'constraints', 'content', 'current_max_a', 'description', 'generate_netlist', 'gpt-4o', 'height_mm', 'import', 'llama-3-70b', 'local', 'max_power_w', 'openai', 'package', 'power', 'priority', 'quantity', 'role', 'skidl', 'special_requirements', 'system', 'text', 'type', 'user', 'value', 'voltage', 'width_mm']

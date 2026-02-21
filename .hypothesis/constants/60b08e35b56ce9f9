@@ -1,4 +1,0 @@
-# file: C:\Users\kunal\Downloads\Stuff_made_easy\src\services\simulation_visualization.py
-# hypothesis_version: 6.148.2
-
-[0.0, 1.414, '*', '-', '.', '0', '=', 'Convergence Failure', 'Floating Nodes', 'Frequency (Hz)', 'Magnitude', 'Node', 'Node,Voltage (V)\n', 'Phase (degrees)', 'Simulation Error', 'Singular Matrix', 'Timestep Error', 'Voltage (V)', 'ac_magnitude', 'ac_phase', 'ac_response', 'bandwidth', 'bode', 'bode_magnitude_plot', 'bode_phase_plot', 'convergence', 'dc_plot', 'dc_summary', 'dc_voltage', 'dc_voltages', 'error', 'floating', 'linear', 'log', 'max_magnitude', 'max_voltage', 'min_magnitude', 'min_voltage', 'num_nodes', 'out', 'simulation_type', 'singular matrix', 'status', 'success', 'timestep too small', 'title', 'type', 'w', 'warnings', 'x_data', 'x_label', 'x_scale', 'y_data', 'y_label', 'y_scale']
