@@ -206,3 +206,6 @@ downloads/
 generated_designs/
 simulation_results/
 component_cache/
+
+# Kiro IDE files
+.kiro/
