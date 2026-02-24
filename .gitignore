@@ -209,3 +209,19 @@ component_cache/
 
 # Kiro IDE files
 .kiro/
+
+# Test reports and standalone test files
+test_report_*.md
+test_*_standalone.py
+
+# Virtual environment
+.venv/
+
+# IDE settings
+.vscode/
+
+# Temporary and generated content
+*.tmp
+*.bak
+*.swp
+*~
