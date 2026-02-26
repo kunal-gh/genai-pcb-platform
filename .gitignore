@@ -225,3 +225,52 @@ test_*_standalone.py
 *.bak
 *.swp
 *~
+
+# ML Model checkpoints and training artifacts
+checkpoints/
+models/
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.pkl
+*.pickle
+wandb/
+mlruns/
+tensorboard_logs/
+
+# Configuration examples (keep templates only)
+config/*_example.yaml
+config/*_custom.yaml
+examples/
+
+# Docker build artifacts
+docker/api/
+docker/grafana/
+docker/prometheus/
+
+# Frontend build artifacts
+frontend/build/
+frontend/node_modules/
+frontend/.env.local
+frontend/coverage/
+
+# Development and testing artifacts
+tests/
+pytest.ini
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+
+# Routing optimizer (internal implementation)
+routing_optimizer/
+
+# Environment files (keep .example only)
+.env
+.env.local
+.env.production
+
+# Git metadata
+.git/
+.github/

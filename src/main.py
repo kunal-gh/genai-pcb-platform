@@ -84,6 +84,10 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(api_router)
 
+# Include routing optimizer routes
+from .api.routing_routes import router as routing_router
+app.include_router(routing_router)
+
 
 @app.get("/")
 async def root():

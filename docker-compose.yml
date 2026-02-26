@@ -4,8 +4,9 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
+    container_name: pcb-postgres
     environment:
-      POSTGRES_DB: stuff_made_easy
+      POSTGRES_DB: pcb_design
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -18,10 +19,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - pcb-network
 
   # Redis Cache & Message Broker
   redis:
     image: redis:7-alpine
+    container_name: pcb-redis
     ports:
       - "6379:6379"
     volumes:
@@ -31,19 +35,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - pcb-network
 
-  # Main API Service
+  # FastAPI Backend
   api:
     build:
       context: .
-      dockerfile: docker/api/Dockerfile
+      dockerfile: Dockerfile
+    container_name: pcb-api
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/stuff_made_easy
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/pcb_design
       - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PYTHONUNBUFFERED=1
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,17 +66,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - pcb-network
 
   # Celery Worker for Background Tasks
   worker:
     build:
       context: .
-      dockerfile: docker/api/Dockerfile
+      dockerfile: Dockerfile
+    container_name: pcb-worker
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/stuff_made_easy
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/pcb_design
       - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PYTHONUNBUFFERED=1
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,69 +89,35 @@ services:
     volumes:
       - ./src:/app/src
       - ./generated_designs:/app/generated_designs
-    command: celery -A src.worker worker --loglevel=info
+    command: celery -A src.worker worker --loglevel=info --concurrency=4
+    networks:
+      - pcb-network
 
-  # Frontend Development Server
+  # React Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    container_name: pcb-frontend
     ports:
       - "3000:3000"
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
+      - /app/node_modules
     environment:
       - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
     command: npm start
-
-  # Nginx Reverse Proxy (Production)
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./docker/nginx/ssl:/etc/nginx/ssl
-    depends_on:
-      - api
-      - frontend
-    profiles:
-      - production
-
-  # Prometheus Monitoring
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-    profiles:
-      - monitoring
-
-  # Grafana Dashboard
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
-    profiles:
-      - monitoring
+    networks:
+      - pcb-network
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
-  prometheus_data:
-  grafana_data:
+    driver: local
+
+networks:
+  pcb-network:
+    driver: bridge

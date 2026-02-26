@@ -1,274 +1,178 @@
-# Contributing to stuff-made-easy
+# Contributing to AI-Powered PCB Design Platform
 
-Thank you for your interest in contributing to Stuff-made-easy! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing! This document provides guidelines for contributing to this project.
 
-## 🚀 Getting Started
+## Development Setup
 
 ### Prerequisites
+
 - Python 3.10+
-- Node.js 18+
+- Node.js 16+
 - Docker & Docker Compose
-- KiCad 7.0+
 - Git
 
-### Development Setup
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/stuff-made-easy.git`
-3. Set up the development environment:
+### Local Development
+
+1. **Fork and clone the repository**
    ```bash
-   cd stuff-made-easy
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   git clone https://github.com/yourusername/ai-pcb-design.git
+   cd ai-pcb-design
+   ```
+
+2. **Set up Python environment**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    pip install -r requirements.txt
+   ```
+
+3. **Set up environment variables**
+   ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
-4. Start the development services:
+4. **Start services**
    ```bash
    docker-compose up -d postgres redis
-   python -m uvicorn src.main:app --reload
    ```
 
-## 📋 Development Workflow
+5. **Run the application**
+   ```bash
+   uvicorn src.main:app --reload
+   ```
 
-### Branch Naming Convention
-- `feature/task-number-description` - New features
-- `bugfix/issue-description` - Bug fixes
-- `docs/update-description` - Documentation updates
-- `refactor/component-name` - Code refactoring
+## Code Style
 
-### Commit Message Format
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+### Python
 
-```
-type(scope): description
+- Follow PEP 8 style guide
+- Use type hints for function signatures
+- Maximum line length: 100 characters
+- Use Black for code formatting
+- Use isort for import sorting
 
-[optional body]
+```bash
+# Format code
+black src/
+isort src/
 
-[optional footer(s)]
-```
-
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
-
-**Examples:**
-```
-feat(nlp): add natural language prompt validation
-fix(skidl): handle missing component libraries gracefully
-docs(api): update endpoint documentation
-test(verification): add property tests for DFM validation
+# Check style
+flake8 src/
+mypy src/
 ```
 
-## 🧪 Testing Guidelines
+### TypeScript/React
+
+- Follow Airbnb style guide
+- Use functional components with hooks
+- Use TypeScript for type safety
+
+## Testing
 
 ### Running Tests
+
 ```bash
-# Unit tests
-pytest tests/unit/ -v
+# Run all tests
+pytest
 
-# Property-based tests
-pytest tests/property/ -v --hypothesis-show-statistics
-
-# Integration tests
-pytest tests/integration/ -v
-
-# All tests with coverage
+# Run with coverage
 pytest --cov=src --cov-report=html
+
+# Run specific test file
+pytest tests/unit/test_falcon_gnn.py
 ```
 
 ### Writing Tests
 
-#### Unit Tests
-- Test specific functions and classes in isolation
-- Use descriptive test names: `test_parse_prompt_with_valid_input_returns_structured_json`
-- Mock external dependencies (LLM APIs, file system, etc.)
-- Test both success and failure scenarios
+- Write unit tests for all new functions
+- Write integration tests for API endpoints
+- Use property-based testing for ML components
+- Aim for >80% code coverage
 
-#### Property-Based Tests
-- Use Hypothesis for testing universal properties
-- Focus on invariants that should hold for all valid inputs
-- Include shrinking strategies for complex data types
-- Tag tests with the property they validate:
-  ```python
-  # Feature: genai-pcb-platform, Property 1: Natural Language Parsing Completeness
-  @given(valid_prompts())
-  def test_prompt_parsing_completeness(prompt):
-      # Test implementation
-  ```
+## Pull Request Process
 
-#### Integration Tests
-- Test complete workflows end-to-end
-- Use realistic test data
-- Verify file generation and validation
-- Test error handling and recovery
+1. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-### Test Data
-- Store test fixtures in `tests/fixtures/`
-- Use factory_boy for generating test objects
-- Include sample prompts, component data, and expected outputs
+2. **Make your changes**
+   - Write clean, documented code
+   - Add tests for new functionality
+   - Update documentation as needed
 
-## 📝 Code Style Guidelines
+3. **Commit your changes**
+   ```bash
+   git add .
+   git commit -m "feat: add new feature description"
+   ```
 
-### Python Code Style
-- Follow PEP 8 with line length of 88 characters (Black default)
-- Use type hints for all function parameters and return values
-- Write Google-style docstrings for all public functions and classes
-- Use meaningful variable and function names
+   Use conventional commit messages:
+   - `feat:` New feature
+   - `fix:` Bug fix
+   - `docs:` Documentation changes
+   - `style:` Code style changes
+   - `refactor:` Code refactoring
+   - `test:` Test additions/changes
+   - `chore:` Build process or auxiliary tool changes
 
-### Code Quality Tools
-```bash
-# Format code
-black src/ tests/
+4. **Push to your fork**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-# Sort imports
-isort src/ tests/
+5. **Create a Pull Request**
+   - Provide a clear description of changes
+   - Reference any related issues
+   - Ensure all tests pass
+   - Request review from maintainers
 
-# Lint code
-flake8 src/ tests/
+## Project Structure
 
-# Type checking
-mypy src/
-
-# Run all quality checks
-pre-commit run --all-files
+```
+src/
+├── api/              # FastAPI routes and schemas
+├── models/           # Database models
+├── services/         # Business logic
+│   ├── falcon_gnn.py           # GNN implementation
+│   ├── rl_routing_agent.py    # RL router
+│   └── ...
+└── training/         # ML training scripts
 ```
 
-### Pre-commit Hooks
-Install pre-commit hooks to automatically run quality checks:
-```bash
-pre-commit install
-```
+## ML Model Development
 
-## 🏗️ Architecture Guidelines
+### Adding New Models
 
-### Service Design
-- Follow single responsibility principle
-- Use dependency injection for testability
-- Implement proper error handling and logging
-- Design for horizontal scalability
+1. Create model file in `src/services/`
+2. Add training script in `src/training/`
+3. Update model registry
+4. Add comprehensive tests
+5. Document model architecture and usage
 
-### API Design
-- Follow RESTful conventions
-- Use Pydantic models for request/response validation
-- Include comprehensive OpenAPI documentation
-- Implement proper HTTP status codes
+### Training Guidelines
 
-### Database Design
-- Use SQLAlchemy ORM with proper relationships
-- Include database migrations with Alembic
-- Design for performance with appropriate indexes
-- Follow normalization principles
+- Use configuration files for hyperparameters
+- Log training metrics to TensorBoard/Weights & Biases
+- Save checkpoints regularly
+- Document training procedures
 
-## 📚 Documentation
+## Documentation
 
-### Code Documentation
-- Write clear docstrings for all public APIs
-- Include usage examples in docstrings
-- Document complex algorithms and business logic
-- Keep README files updated
+- Update README.md for user-facing changes
+- Add docstrings to all functions and classes
+- Update API documentation for endpoint changes
+- Include examples for new features
 
-### API Documentation
-- Use OpenAPI/Swagger specifications
-- Include request/response examples
-- Document error responses and status codes
-- Provide integration examples
+## Questions?
 
-## 🐛 Bug Reports
+Feel free to open an issue for:
+- Bug reports
+- Feature requests
+- Questions about the codebase
+- Suggestions for improvements
 
-When reporting bugs, please include:
-- Clear description of the issue
-- Steps to reproduce the problem
-- Expected vs actual behavior
-- Environment details (OS, Python version, etc.)
-- Relevant logs or error messages
-- Minimal code example if applicable
+## License
 
-Use the bug report template in GitHub Issues.
-
-## 💡 Feature Requests
-
-For new features:
-- Check existing issues and discussions first
-- Provide clear use case and motivation
-- Consider implementation complexity
-- Discuss API design implications
-- Include mockups or examples if relevant
-
-## 🔍 Code Review Process
-
-### Submitting Pull Requests
-1. Create a feature branch from `main`
-2. Make your changes with appropriate tests
-3. Ensure all tests pass and code quality checks succeed
-4. Update documentation if needed
-5. Submit a pull request with clear description
-
-### Review Criteria
-- Code follows style guidelines and best practices
-- Adequate test coverage for new functionality
-- Documentation is updated appropriately
-- No breaking changes without discussion
-- Performance implications are considered
-
-### Review Process
-- All PRs require at least one approval
-- Automated checks must pass
-- Address reviewer feedback promptly
-- Squash commits before merging when appropriate
-
-## 🏷️ Release Process
-
-### Versioning
-We follow [Semantic Versioning](https://semver.org/):
-- `MAJOR.MINOR.PATCH`
-- Major: Breaking changes
-- Minor: New features (backward compatible)
-- Patch: Bug fixes (backward compatible)
-
-### Release Checklist
-- [ ] All tests pass
-- [ ] Documentation is updated
-- [ ] CHANGELOG.md is updated
-- [ ] Version numbers are bumped
-- [ ] Release notes are prepared
-- [ ] Security review is completed
-
-## 🤝 Community Guidelines
-
-### Code of Conduct
-- Be respectful and inclusive
-- Welcome newcomers and help them learn
-- Focus on constructive feedback
-- Respect different perspectives and experiences
-
-### Communication Channels
-- GitHub Issues: Bug reports and feature requests
-- GitHub Discussions: General questions and ideas
-- Discord: Real-time chat and community support
-- Email: Security issues and private matters
-
-## 📞 Getting Help
-
-If you need help:
-1. Check the documentation and FAQ
-2. Search existing GitHub issues
-3. Ask in GitHub Discussions
-4. Join our Discord community
-5. Contact maintainers directly for sensitive issues
-
-## 🙏 Recognition
-
-Contributors are recognized in:
-- CONTRIBUTORS.md file
-- Release notes
-- Project documentation
-- Annual contributor highlights
-
-Thank you for contributing to stuff-made-easy! 🎉
+By contributing, you agree that your contributions will be licensed under the MIT License.
