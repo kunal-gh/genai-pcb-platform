@@ -1,0 +1,109 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# ML Models & Checkpoints (Hide implementation)
+models/
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.pkl
+*.joblib
+
+# Training data (Hide datasets)
+data/
+datasets/
+*.csv
+*.json
+*.npy
+*.npz
+
+# Generated files
+generated_designs/
+uploads/
+*.gerber
+*.gbr
+*.drl
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# React build
+frontend/build/
+frontend/.env.local
+frontend/.env.production
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Docker
+.dockerignore
+
+# Sensitive implementation details (Portfolio protection)
+src/services/falcon_gnn.py
+src/services/rl_routing_agent.py
+src/services/rl_router.py
+src/training/
+*.ipynb
+experiments/
+
+# Keep only high-level architecture visible
