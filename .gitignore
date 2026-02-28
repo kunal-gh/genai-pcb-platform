@@ -31,6 +31,7 @@ env/
 .env
 .env.local
 .env.production
+.env.example
 
 # IDE
 .vscode/
@@ -52,7 +53,7 @@ logs/
 *.sqlite
 *.sqlite3
 
-# ML Models & Checkpoints (Hide implementation)
+# ML Models & Checkpoints (HIDE IMPLEMENTATION)
 models/
 checkpoints/
 *.pth
@@ -62,7 +63,7 @@ checkpoints/
 *.pkl
 *.joblib
 
-# Training data (Hide datasets)
+# Training data (HIDE DATASETS)
 data/
 datasets/
 *.csv
@@ -95,15 +96,21 @@ htmlcov/
 .pytest_cache/
 .tox/
 
-# Docker
+# Docker (HIDE - not needed for portfolio)
+docker/
+docker-compose.yml
+Dockerfile
 .dockerignore
 
-# Sensitive implementation details (Portfolio protection)
-src/services/falcon_gnn.py
-src/services/rl_routing_agent.py
-src/services/rl_router.py
-src/training/
-*.ipynb
-experiments/
+# Backend source code (HIDE IMPLEMENTATION)
+src/
+!src/__init__.py
 
-# Keep only high-level architecture visible
+# Requirements (HIDE - shows all dependencies)
+requirements.txt
+
+# Keep only these visible:
+# - README.md
+# - ARCHITECTURE.md
+# - LICENSE
+# - frontend/ (UI showcase)

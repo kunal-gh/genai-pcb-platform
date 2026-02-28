@@ -1,1 +1,0 @@
-# stuff-made-easy: GenAI PCB Design Platform
